@@ -56,6 +56,29 @@ class Portfolio {
         return result.rows;
     }
 
+    /** Find portfolio by user ID and strategy ID.
+     *
+     * Returns portfolio if found, or null if not found.
+     *
+     * Throws an error on database query failure.
+     */
+    static async findByUserAndStrategy(userId, strategyId) {
+        const result = await db.query(
+            `SELECT id, user_id AS "userId", 
+                    portfolio_name AS "portfolioName", 
+                    creation_date AS "creationDate", 
+                    available_cash AS "availableCash", 
+                    strategy_id AS "strategyId"
+             FROM portfolios
+             WHERE user_id = $1 AND strategy_id = $2`,
+            [userId, strategyId]
+        );
+
+        const portfolio = result.rows[0];
+
+        return portfolio || null;
+    }
+
     /** Given a portfolio id, return data about portfolio.
      *
      * Returns { id, userId, portfolioName, creationDate, availableCash, strategyId }

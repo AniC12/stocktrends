@@ -3,14 +3,32 @@
 /** Express app for stocktrends. */
 
 const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
 
 const { NotFoundError } = require("./expressError");
+const { authenticateJWT } = require("./middleware/auth");
+
+const usersRoutes = require("./routes/users");
+const portfolioRoutes = require("./routes/portfolios");
+const strategyRoutes = require("./routes/strategies");
+const stratPerfHistoryRoutes = require("./routes/strategyPerformanceHistory");
 
 const app = express();
 
 app.get('/', (req, res) => {
     res.send('Hello, StockTrends backend!');
 });
+
+app.use(cors());
+app.use(express.json());
+app.use(morgan("tiny"));
+app.use(authenticateJWT);
+
+app.use("/users", usersRoutes);
+app.use("/portfolios", portfolioRoutes);
+app.use("/strategies", strategyRoutes);
+app.use("/strategyPerformanceHistory", stratPerfHistoryRoutes);
 
 /** Handle 404 errors -- this matches everything */
 app.use(function (req, res, next) {
