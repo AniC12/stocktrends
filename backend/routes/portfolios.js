@@ -5,9 +5,12 @@ const { getToken } = require('../helpers/tokens');
 const router = new express.Router();
 
 // Create a new portfolio
-router.post('/portfolios', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.post('/', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
-        const { userId, portfolioName, creationDate, availableCash, strategyId } = req.body;
+        const { portfolioName, availableCash, strategyId } = req.body;
+        const userId = getToken(req);
+        const now = new Date();
+        const creationDate = now.toISOString().split('T')[0];
         const portfolio = await Portfolio.create({ userId, portfolioName, creationDate, availableCash, strategyId });
         return res.status(201).json({ portfolio });
     } catch (err) {
@@ -16,7 +19,7 @@ router.post('/portfolios', authenticateJWT, ensureLoggedIn, async (req, res, nex
 });
 
 // Get all portfolios for a user
-router.get('/portfolios', authenticateJWT, ensureCorrectUser, async (req, res, next) => {
+router.get('/', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
         const userId = getToken(req);
         const portfolios = await Portfolio.findAllForUser(userId);
@@ -27,7 +30,7 @@ router.get('/portfolios', authenticateJWT, ensureCorrectUser, async (req, res, n
 });
 
 // Get a specific portfolio by ID
-router.get('/portfolios/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.get('/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
         const id = req.params.id;
         const portfolio = await Portfolio.get(id);
@@ -38,15 +41,17 @@ router.get('/portfolios/:id', authenticateJWT, ensureLoggedIn, async (req, res, 
 });
 
 // Get or create a portfolio for a user with a specific strategy
-router.get('/portfolios/user/:userId/strategy/:strategyId', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.get('/strategy/:strategyId', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
-        const { userId, strategyId } = req.params;
+        const { strategyId } = req.params;
+        const userId = getToken(req);
+        console.log("userid " + userId);
         let portfolio = await Portfolio.findByUserAndStrategy(userId, strategyId);
 
-        if (!portfolio) {
-            // Assuming you have a method to create a portfolio with default values
-            portfolio = await Portfolio.create({ userId, strategyId, /* other necessary default values */ });
-        }
+        //if (!portfolio) {
+        //    // Assuming you have a method to create a portfolio with default values
+        //    portfolio = await Portfolio.create({ userId, strategyId, /* other necessary default values */ });
+        //}
 
         return res.json({ portfolio });
     } catch (err) {
@@ -55,7 +60,7 @@ router.get('/portfolios/user/:userId/strategy/:strategyId', authenticateJWT, ens
 });
 
 // Update a specific portfolio
-router.patch('/portfolios/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.patch('/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
         const id = req.params.id;
         const data = req.body;
@@ -67,7 +72,7 @@ router.patch('/portfolios/:id', authenticateJWT, ensureLoggedIn, async (req, res
 });
 
 // Delete a specific portfolio
-router.delete('/portfolios/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.delete('/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
         const id = req.params.id;
         await Portfolio.remove(id);

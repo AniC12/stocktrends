@@ -60,6 +60,29 @@ class Strategy {
         return result.rows;
     }
 
+    /** Find all unused strategies.
+     *
+     * Returns [{ id, strategyName, criteria, description, returnRate }, ...]
+     **/
+
+    static async findUnused(userId) {
+        const result = await db.query(
+            `SELECT s.id, 
+                s.strategy_name AS "strategyName", 
+                s.criteria, 
+                s.description, 
+                s.return_rate AS "returnRate"
+                FROM strategies s
+                LEFT JOIN portfolios p 
+                    ON s.id = p.strategy_id AND p.user_id = $1
+                WHERE p.id IS NULL
+                ORDER BY strategy_name`,
+                [userId]
+        );
+
+        return result.rows;
+    }
+
     /** Given a strategy id, return data about strategy.
      *
      * Returns { id, strategyName, criteria, description, returnRate }

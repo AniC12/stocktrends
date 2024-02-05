@@ -4,7 +4,7 @@ const { createToken, getToken } = require('../helpers/tokens');
 const router = new express.Router();
 
 // User registration route
-router.post('/users/register', async (req, res, next) => {
+router.post('/register', async (req, res, next) => {
     try {
         const { email, password, firstName, lastName } = req.body;
         
@@ -21,7 +21,7 @@ router.post('/users/register', async (req, res, next) => {
 });
 
 // User login route
-router.post('/users/login', async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
         const user = await User.authenticate(email, password);
@@ -33,7 +33,7 @@ router.post('/users/login', async (req, res, next) => {
 });
 
 // create guest user
-router.post('/users/createguest', async (req, res, next) => {
+router.post('/createguest', async (req, res, next) => {
     try {
         const user = await User.createGuest();
         const token = createToken(user); // Create a JWT for the user
@@ -44,7 +44,7 @@ router.post('/users/createguest', async (req, res, next) => {
 });
 
 // Get user profile route
-router.get('/users', async (req, res, next) => {
+router.get('/', async (req, res, next) => {
     try {
         const userid = getToken(req);
         const user = await User.get(userid);
@@ -55,7 +55,7 @@ router.get('/users', async (req, res, next) => {
 });
 
 // Update user profile route
-router.patch('/users', async (req, res, next) => {
+router.patch('/', async (req, res, next) => {
     try {
         const userid = getToken(req);
         const user = await User.update(userid, req.body);

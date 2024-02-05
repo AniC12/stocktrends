@@ -11,13 +11,6 @@ const {
 
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
 
-let randomWords;
-
-async function loadRandomWords() {
-    if (!randomWords) {
-        randomWords = (await import('random-words')).default;
-    }
-}
 
 /** Related functions for users. */
 
@@ -32,7 +25,8 @@ class User {
     static async authenticate(email, password) {
         // try to find the user first
         const result = await db.query(
-            `SELECT email,
+            `SELECT id,
+                  email,
                   password,
                   first_name AS "firstName",
                   last_name AS "lastName"
@@ -84,7 +78,7 @@ class User {
             first_name,
             last_name)
            VALUES ($1, $2, $3, $4)
-           RETURNING email, first_name AS "firstName", last_name AS "lastName"`,
+           RETURNING id, email, first_name AS "firstName", last_name AS "lastName"`,
             [
                 email,
                 hashedPassword,
@@ -116,7 +110,7 @@ class User {
             first_name,
             last_name)
            VALUES ($1, $2, $3, $4)
-           RETURNING email, first_name AS "firstName", last_name AS "lastName"`,
+           RETURNING id, email, first_name AS "firstName", last_name AS "lastName"`,
             [
                 email,
                 email,
@@ -182,7 +176,8 @@ class User {
         const querySql = `UPDATE users 
                       SET ${setCols} 
                       WHERE id = ${useridVarIdx} 
-                      RETURNING email,
+                      RETURNING id,
+                                email,
                                 first_name AS "firstName",
                                 last_name AS "lastName"
                                 `;
@@ -211,17 +206,12 @@ class User {
     }
 
     static async generateRandomEmail() {
-        await loadRandomWords();
-
-        // Generate a random word
-        const word = randomWords();
-        const domain = randomWords();
-
-        // Generate a random number, e.g., between 0 and 9999
-        const number = Math.floor(Math.random() * 10000);
+        
+        const word = Math.floor(Math.random() * 10000000);
+        const domain = Math.floor(Math.random() * 10000000);
 
         // Combine the word and number to form an email
-        return `${word}${number}@${domain}.com`;
+        return `${word}@${domain}.com`;
     }
 
 

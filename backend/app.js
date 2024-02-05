@@ -20,6 +20,10 @@ app.get('/', (req, res) => {
     res.send('Hello, StockTrends backend!');
 });
 
+app.post('/users/blabla', (req, res) => {
+    res.send("{'aa':'bb'}")
+});
+
 app.use(cors());
 app.use(express.json());
 app.use(morgan("tiny"));
