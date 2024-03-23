@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
  * StrategyList -> StrategyCard
  */
 
-function StrategyCard({ name, description, logoUrl, id }) {
+function StrategyCard({ name, description, id }) {
 
     return (
         <Link className="StrategyCard card" to={`/strategies/${id}`}>

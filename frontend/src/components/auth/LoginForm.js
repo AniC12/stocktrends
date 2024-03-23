@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Alert from "../common/Alert";
 
 /** Login form.
@@ -14,7 +14,7 @@ import Alert from "../common/Alert";
  */
 
 function LoginForm({ login }) {
-    const history = useHistory();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -30,7 +30,7 @@ function LoginForm({ login }) {
         evt.preventDefault();
         let result = await login(formData);
         if (result.success) {
-            history.push("/portfolios");
+            navigate("/portfolios");
         } else {
             setFormErrors(result.errors);
         }

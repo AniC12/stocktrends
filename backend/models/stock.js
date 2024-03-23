@@ -9,18 +9,18 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class Stock {
     /** Add a new stock (from data), update db, return new stock data.
      *
-     * data should be { tickerSymbol, companyName, startDate }
+     * data should be { tickerSymbol, companyName }
      *
-     * Returns { id, tickerSymbol, companyName, startDate }
+     * Returns { id, tickerSymbol, companyName }
      **/
 
-    static async add({ tickerSymbol, companyName, startDate }) {
+    static async add({ tickerSymbol, companyName }) {
         const result = await db.query(
             `INSERT INTO stocks
-             (ticket_symbol, company_name, start_date)
+             (ticket_symbol, company_name)
              VALUES ($1, $2, $3)
-             RETURNING id, ticket_symbol AS "tickerSymbol", company_name AS "companyName", start_date AS "startDate"`,
-            [tickerSymbol, companyName, startDate]
+             RETURNING id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"`,
+            [tickerSymbol, companyName]
         );
 
         const stock = result.rows[0];
@@ -30,12 +30,12 @@ class Stock {
 
     /** Find all stocks.
      *
-     * Returns [{ id, tickerSymbol, companyName, startDate }, ...]
+     * Returns [{ id, tickerSymbol, companyName }, ...]
      **/
 
     static async findAll() {
         const result = await db.query(
-            `SELECT id, ticket_symbol AS "tickerSymbol", company_name AS "companyName", start_date AS "startDate"
+            `SELECT id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"
              FROM stocks
              ORDER BY company_name`
         );
@@ -45,14 +45,14 @@ class Stock {
 
     /** Given a stock id, return data about stock.
      *
-     * Returns { id, tickerSymbol, companyName, startDate }
+     * Returns { id, tickerSymbol, companyName }
      *
      * Throws NotFoundError if not found.
      **/
 
     static async get(id) {
         const result = await db.query(
-            `SELECT id, ticket_symbol AS "tickerSymbol", company_name AS "companyName", start_date AS "startDate"
+            `SELECT id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"
              FROM stocks
              WHERE id = $1`,
             [id]
@@ -70,9 +70,9 @@ class Stock {
      * This is a "partial update" --- it's fine if data doesn't contain
      * all the fields; this only changes provided ones.
      *
-     * Data can include: { tickerSymbol, companyName, startDate }
+     * Data can include: { tickerSymbol, companyName }
      *
-     * Returns { id, tickerSymbol, companyName, startDate }
+     * Returns { id, tickerSymbol, companyName }
      *
      * Throws NotFoundError if not found.
      */
@@ -81,15 +81,14 @@ class Stock {
             data,
             {
                 tickerSymbol: "ticket_symbol",
-                companyName: "company_name",
-                startDate: "start_date"
+                companyName: "company_name"
             });
         const stockIdVarIdx = "$" + (values.length + 1);
 
         const querySql = `UPDATE stocks 
                           SET ${setCols} 
                           WHERE id = ${stockIdVarIdx} 
-                          RETURNING id, ticket_symbol AS "tickerSymbol", company_name AS "companyName", start_date AS "startDate"`;
+                          RETURNING id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"`;
         const result = await db.query(querySql, [...values, id]);
         const stock = result.rows[0];
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import StocktrendsApi from "../api/api";
+import StocktrendsApi from "../../api/api";
 import StrategyCard from "./StrategyCard";
 import LoadingSpinner from "../common/LoadingSpinner";
 
@@ -28,12 +28,14 @@ function StrategyList() {
 
     return (
         <div className="StrategyList col-md-8 offset-md-2">
+            <h1>Strategies</h1>
             {strategies.length
                 ? (
-                    <div className="CompanyList-list">
+                    <div className="StrategyList-list">
                         {strategies.map(s => (
                             <StrategyCard
                                 key={s.id}
+                                id={s.id}
                                 name={s.name}
                                 description={s.description}
                             />
