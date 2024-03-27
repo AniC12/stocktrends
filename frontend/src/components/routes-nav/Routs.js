@@ -11,26 +11,15 @@ function MyRoutes({ signup, login }) {
     return (
         <div className="pt-5">
             <Routes>
-                <Route exact path="/">
-                    <Homepage />
-                </Route>
+                <Route path="/" element={<Homepage />} />
 
-                <Route exact path="/login">
-                    <LoginForm login={login} />
-                </Route>
+                <Route path="/login" element={<LoginForm login={login} />} />
 
-                <Route exact path="/signup">
-                    <SignupForm signup={signup} />
-                </Route>
+                <Route path="/signup" element={<SignupForm signup={signup} />} />
 
-                <Route exact path="/strategies">
-                    <StrategyList />
-                </Route>
+                <Route path="/strategies" element={<StrategyList />} />
 
-                <Route exact path="/strategies/:id">
-                    <StrategyDetail />
-                </Route>
-
+                <Route path="/strategies/:id" element={<StrategyDetail />} />
             </Routes>
         </div>
     );

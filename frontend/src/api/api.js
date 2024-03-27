@@ -17,8 +17,8 @@ class StocktrendsApi {
         const url = `${BASE_URL}/${endpoint}`;
         const headers = { Authorization: `Bearer ${StocktrendsApi.token}` };
         const params = (method === "get")
-            ? data
-            : {};
+            ? {}
+            : data;
 
         try {
             return (await axios({ url, method, data, params, headers })).data;
@@ -78,6 +78,13 @@ class StocktrendsApi {
     static async signup(data) {
         let res = await this.request(`auth/register`, data, "post");
         return res.token;
+    }
+
+    /** Get performance history for a strategy by id. */
+
+    static async getStrategyPerformanceHistory(strategyId) {
+        let res = await this.request(`strategyPerformanceHistory/${strategyId}`);
+        return res.performanceHistory;
     }
 }
 

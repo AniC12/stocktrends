@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Navigation from './components/routes-nav/Navigation';
-import Homepage from './components/homepage/HomePage';
 import MyRoutes from './components/routes-nav/Routs';
 import { BrowserRouter } from "react-router-dom";
 import StocktrendsApi from './api/api';

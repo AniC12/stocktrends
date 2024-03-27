@@ -36,8 +36,8 @@ function StrategyList() {
                             <StrategyCard
                                 key={s.id}
                                 id={s.id}
-                                name={s.name}
-                                description={s.description}
+                                name={s.strategyName}
+                                criteria={s.criteria}
                             />
                         ))}
                     </div>
