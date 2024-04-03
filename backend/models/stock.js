@@ -9,18 +9,18 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class Stock {
     /** Add a new stock (from data), update db, return new stock data.
      *
-     * data should be { tickerSymbol, companyName }
+     * data should be { symbol, companyName, price, updateDate }
      *
-     * Returns { id, tickerSymbol, companyName }
+     * Returns { id, symbol, companyName }
      **/
 
-    static async add({ tickerSymbol, companyName }) {
+    static async add({ symbol, companyName, price, updateDate }) {
         const result = await db.query(
             `INSERT INTO stocks
-             (ticket_symbol, company_name)
-             VALUES ($1, $2, $3)
-             RETURNING id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"`,
-            [tickerSymbol, companyName]
+             (symbol, company_name, price, update_date)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id, symbol, company_name AS "companyName", price, update_date as "updateDate"`,
+            [symbol, companyName, price, updateDate]
         );
 
         const stock = result.rows[0];
@@ -30,12 +30,12 @@ class Stock {
 
     /** Find all stocks.
      *
-     * Returns [{ id, tickerSymbol, companyName }, ...]
+     * Returns [{ id, symbol, companyName }, ...]
      **/
 
     static async findAll() {
         const result = await db.query(
-            `SELECT id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"
+            `SELECT id, symbol, company_name AS "companyName", price, update_date as "updateDate"
              FROM stocks
              ORDER BY company_name`
         );
@@ -45,14 +45,14 @@ class Stock {
 
     /** Given a stock id, return data about stock.
      *
-     * Returns { id, tickerSymbol, companyName }
+     * Returns { id, symbol, companyName, price, updateDate }
      *
      * Throws NotFoundError if not found.
      **/
 
     static async get(id) {
         const result = await db.query(
-            `SELECT id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"
+            `SELECT id, symbol, company_name AS "companyName", price, update_date as "updateDate"
              FROM stocks
              WHERE id = $1`,
             [id]
@@ -65,34 +65,39 @@ class Stock {
         return stock;
     }
 
-    /** Update stock data with `data`.
+    /** Given a stock symbol, return data about stock.
      *
-     * This is a "partial update" --- it's fine if data doesn't contain
-     * all the fields; this only changes provided ones.
+     * Returns { id, symbol, companyName, price, updateDate }
      *
-     * Data can include: { tickerSymbol, companyName }
-     *
-     * Returns { id, tickerSymbol, companyName }
-     *
-     * Throws NotFoundError if not found.
-     */
-    static async update(id, data) {
-        const { setCols, values } = sqlForPartialUpdate(
-            data,
-            {
-                tickerSymbol: "ticket_symbol",
-                companyName: "company_name"
-            });
-        const stockIdVarIdx = "$" + (values.length + 1);
+    **/
 
-        const querySql = `UPDATE stocks 
-                          SET ${setCols} 
-                          WHERE id = ${stockIdVarIdx} 
-                          RETURNING id, ticket_symbol AS "tickerSymbol", company_name AS "companyName"`;
-        const result = await db.query(querySql, [...values, id]);
+    static async getBySymbol(symbol) {
+        const result = await db.query(
+            `SELECT id, symbol, company_name AS "companyName", price, update_date as "updateDate"
+             FROM stocks
+             WHERE symbol = $1`,
+            [symbol]
+        );
+
+        if (result.rows.length === 0) {
+            return null;
+        }
+
+        return result.rows[0];
+    }
+
+    
+
+    static async updatePrice({ id, price, updateDate }) {
+        const result = await db.query(
+            `UPDATE stocks
+             SET price = $1, update_date = $2
+             WHERE id = $3
+             RETURNING id, symbol, company_name AS "companyName", price, update_date as "updateDate"`,
+            [price, updateDate, id]
+        );
+
         const stock = result.rows[0];
-
-        if (!stock) throw new NotFoundError(`No stock: ${id}`);
 
         return stock;
     }

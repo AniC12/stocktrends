@@ -145,6 +145,24 @@ class Portfolio {
         return portfolio;
     }
 
+    static async updateCash(id, cash) {
+        const querySql = `UPDATE portfolios 
+                          SET available_cash = $1
+                          WHERE id = $2
+                          RETURNING id, 
+                          user_id AS "userId", 
+                          portfolio_name AS "portfolioName", 
+                          creation_date AS "creationDate", 
+                          available_cash AS "availableCash", 
+                          strategy_id AS "strategyId"`;
+        const result = await db.query(querySql, [cash, id]);
+        const portfolio = result.rows[0];
+
+        if (!portfolio) throw new NotFoundError(`No portfolio: ${id}`);
+
+        return portfolio;
+    }
+
     /** Delete given portfolio from database; returns undefined.
      *
      * Throws NotFoundError if portfolio not found.

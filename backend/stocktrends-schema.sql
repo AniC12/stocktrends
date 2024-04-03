@@ -25,25 +25,26 @@ CREATE TABLE portfolios (
 
 CREATE TABLE stocks (
     id SERIAL PRIMARY KEY,
-    ticket_symbol TEXT NOT NULL,
-    company_name TEXT NOT NULL,
-    start_date INTEGER
+    symbol TEXT NOT NULL UNIQUE,
+    company_name TEXT,
+    price FLOAT,
+    update_date INTEGER
 );
 
 CREATE TABLE userStocks (
     id SERIAL PRIMARY KEY,
-    stock_id INTEGER REFERENCES stocks(id) ON DELETE CASCADE,
+    symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
     portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
     amount FLOAT NOT NULL,
-    purchase_date INTEGER NOT NULL,
-    purchase_price FLOAT NOT NULL,
+    purchase_date INTEGER,
+    purchase_price FLOAT,
     sold_date INTEGER,
     sold_price FLOAT
 );
 
 CREATE TABLE marketData (
     id SERIAL PRIMARY KEY,
-    stock_id INTEGER REFERENCES stocks(id) ON DELETE CASCADE,
+    symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
     date INTEGER NOT NULL,
     open_price FLOAT NOT NULL,
     close_price FLOAT NOT NULL,
@@ -69,12 +70,12 @@ CREATE TABLE strategyPerformanceHistory (
 
 CREATE TABLE transactionHistory (
     id SERIAL PRIMARY KEY,
-    stock_id INTEGER REFERENCES stocks(id) ON DELETE CASCADE,
+    symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
     portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL,
-    price FLOAT NOT NULL,
+    price FLOAT,
     date INTEGER NOT NULL,
-    transaction_type INTEGER NOT NULL
+    transaction_type TEXT NOT NULL
 );
 
 CREATE TABLE portfolioValueHistory (
@@ -87,7 +88,7 @@ CREATE TABLE portfolioValueHistory (
 CREATE TABLE suggestedPortfolio (
     id SERIAL PRIMARY KEY,
     strategy_id INTEGER REFERENCES strategies(id) ON DELETE CASCADE,
-    stock_id INTEGER REFERENCES stocks(id) ON DELETE CASCADE,
+    symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
     amount FLOAT NOT NULL
 );
 
@@ -193,64 +194,64 @@ INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
 (3, 2022, 11.01),
 (3, 2023, 11.61);
 
-INSERT INTO stocks (id, ticket_symbol, company_name) VALUES
-(1, 'MSFT', 'Microsoft Corporation'),
-(2, 'AAPL', 'Apple Inc.'),
-(3, 'NVDA', 'Nvidia Corporation'),
-(4, '2222.SR', 'Saudi Aramco'),
-(5, 'GOOG', 'Alphabet Inc.'),
-(6, 'AMZN', 'Amazon.com, Inc.'),
-(7, 'META', 'Meta Platforms, Inc.'), 
-(8, 'BRK-B', 'Berkshire Hathaway Inc.'),
-(9, 'LLY', 'Eli Lilly and Company'),
-(10, 'TSM', 'Taiwan Semiconductor Manufacturing Company'),
-(11, 'RDDT', 'Reddit, Inc.'),
-(12, 'TSLA', 'Tesla, Inc.'),
-(13, 'SMCI', 'Super Micro Computer, Inc.'),
-(14, 'LULU', 'Lululemon Athletica Inc.'),
-(15, 'AUNA', 'Auna S.A.'),
-(16, 'MRNO', 'Murano Global Investments PLC'),
-(17, 'ALAB', 'Astera Labs, Inc.'),
-(18, 'SOUN', 'SoundHound AI, Inc.'),
-(19, 'CAT', 'Caterpillar Inc.'),
-(20, 'ABBV', 'AbbVie Inc.'),
-(21, 'DE', 'Deere & Company'),
-(22, 'CVX', 'Chevron Corporation'),
-(23, 'GE', 'General Electric Company'),
-(24, 'BK', 'The Bank of New York Mellon Corporation'),
-(25, 'DAL', 'Delta Air Lines, Inc.'),
-(26, 'AIG', 'American International Group, Inc.'),
-(27, 'GIS', 'General Mills, Inc.'),
-(28, 'JNJ', 'Johnson & Johnson');
+INSERT INTO stocks (symbol, company_name) VALUES
+('MSFT', 'Microsoft Corporation'),
+('AAPL', 'Apple Inc.'),
+('NVDA', 'Nvidia Corporation'),
+('2222.SR', 'Saudi Aramco'),
+('GOOG', 'Alphabet Inc.'),
+('AMZN', 'Amazon.com, Inc.'),
+('META', 'Meta Platforms, Inc.'), 
+('BRK-B', 'Berkshire Hathaway Inc.'),
+('LLY', 'Eli Lilly and Company'),
+('TSM', 'Taiwan Semiconductor Manufacturing Company'),
+('RDDT', 'Reddit, Inc.'),
+('TSLA', 'Tesla, Inc.'),
+('SMCI', 'Super Micro Computer, Inc.'),
+('LULU', 'Lululemon Athletica Inc.'),
+('AUNA', 'Auna S.A.'),
+('MRNO', 'Murano Global Investments PLC'),
+('ALAB', 'Astera Labs, Inc.'),
+('SOUN', 'SoundHound AI, Inc.'),
+('CAT', 'Caterpillar Inc.'),
+('ABBV', 'AbbVie Inc.'),
+('DE', 'Deere & Company'),
+('CVX', 'Chevron Corporation'),
+('GE', 'General Electric Company'),
+('BK', 'The Bank of New York Mellon Corporation'),
+('DAL', 'Delta Air Lines, Inc.'),
+('AIG', 'American International Group, Inc.'),
+('GIS', 'General Mills, Inc.'),
+('JNJ', 'Johnson & Johnson');
 
-INSERT INTO suggestedPortfolio (strategy_id, stock_id, amount) VALUES
-(1, 1, 3185000),  -- MSFT
-(1, 2, 2660000),  -- AAPL
-(1, 3, 2357000),  -- NVDA
-(1, 4, 2012000),  -- 2222.SR
-(1, 5, 1879000),  -- GOOG
-(1, 6, 1857000),  -- AMZN
-(1, 7, 1299000),  -- META
-(1, 8, 890100),   -- BRK-B
-(1, 9, 732200),   -- LLY
-(1, 10, 728980),  -- TSM
-(2, 11, 1), -- RDDT
-(2, 12, 1), -- TSLA
-(2, 13, 1), -- SMCI
-(2, 14, 1), -- LULU
-(2, 15, 1), -- AUNA
-(2, 16, 1), -- MRNO
-(2, 17, 1), -- ALAB
-(2, 18, 1), -- SOUN
-(2, 3, 1), -- NVDA
-(2, 2, 1), -- AAPL
-(3, 21, 31), -- DE
-(3, 22, 32), -- CVX
-(3, 23, 33), -- GE
-(3, 24, 34), -- BK
-(3, 25, 35), -- DAL
-(3, 26, 36), -- AIG
-(3, 27, 37), -- GIS
-(3, 28, 38), -- JNJ
-(3, 19, 39), -- CAT
-(3, 20, 40); -- ABBV
+INSERT INTO suggestedPortfolio (strategy_id, symbol, amount) VALUES
+(1, 'MSFT', 3185000),
+(1, 'AAPL', 2660000),
+(1, 'NVDA', 2357000),
+(1, '2222.SR', 2012000),
+(1, 'GOOG', 1879000),
+(1, 'AMZN', 1857000),
+(1, 'META', 1299000),
+(1, 'BRK-B', 890100),
+(1, 'LLY', 732200),  
+(1, 'TSM', 728980),  
+(2, 'RDDT', 1),
+(2, 'TSLA', 1),
+(2, 'SMCI', 1),
+(2, 'LULU', 1),
+(2, 'AUNA', 1),
+(2, 'MRNO', 1),
+(2, 'ALAB', 1),
+(2, 'SOUN', 1),
+(2, 'NVDA', 1),
+(2, 'AAPL', 1),
+(3, 'DE', 31), 
+(3, 'CVX', 32),
+(3, 'GE', 33), 
+(3, 'BK', 34), 
+(3, 'DAL', 35),
+(3, 'AIG', 36),
+(3, 'GIS', 37),
+(3, 'JNJ', 38),
+(3, 'CAT', 39),
+(3, 'ABBV', 40);

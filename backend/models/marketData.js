@@ -9,20 +9,20 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class MarketData {
     /** Add new market data entry (from data), update db, return new market data.
      *
-     * data should be { stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization }
+     * data should be { symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization }
      *
-     * Returns { id, stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization }
+     * Returns { id, symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization }
      **/
 
-    static async add({ stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization }) {
+    static async add({ symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization }) {
         const result = await db.query(
             `INSERT INTO marketData
-             (stock_id, date, open_price, close_price, high, low, volume, market_capitalization)
+             (symbol, date, open_price, close_price, high, low, volume, market_capitalization)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING id, stock_id AS "stockId", date, 
+             RETURNING id, symbol, date, 
                        open_price AS "openPrice", close_price AS "closePrice", 
                        high, low, volume, market_capitalization AS "marketCapitalization"`,
-            [stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization]
+            [symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization]
         );
 
         const marketData = result.rows[0];
@@ -32,17 +32,17 @@ class MarketData {
 
     /** Find all market data for a stock.
      *
-     * Returns [{ id, stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization }, ...]
+     * Returns [{ id, symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization }, ...]
      **/
 
-    static async findAllForStock(stockId) {
+    static async findAllForStock(symbol) {
         const result = await db.query(
-            `SELECT id, stock_id AS "stockId", date, 
+            `SELECT id, symbol, date, 
                     open_price AS "openPrice", close_price AS "closePrice", 
                     high, low, volume, market_capitalization AS "marketCapitalization"
              FROM marketData
-             WHERE stock_id = $1`,
-            [stockId]
+             WHERE symbol = $1`,
+            [symbol]
         );
 
         return result.rows;
@@ -50,14 +50,14 @@ class MarketData {
 
     /** Given a marketData id, return data about the market data entry.
      *
-     * Returns { id, stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization }
+     * Returns { id, symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization }
      *
      * Throws NotFoundError if not found.
      **/
 
     static async get(id) {
         const result = await db.query(
-            `SELECT id, stock_id AS "stockId", date, 
+            `SELECT id, symbol, date, 
                     open_price AS "openPrice", close_price AS "closePrice", 
                     high, low, volume, market_capitalization AS "marketCapitalization"
              FROM marketData
@@ -79,7 +79,7 @@ class MarketData {
      *
      * Data can include: { openPrice, closePrice, high, low, volume, marketCapitalization }
      *
-     * Returns { id, stockId, date, openPrice, closePrice, high, low, volume, marketCapitalization }
+     * Returns { id, symbol, date, openPrice, closePrice, high, low, volume, marketCapitalization }
      *
      * Throws NotFoundError if not found.
      */
@@ -99,7 +99,7 @@ class MarketData {
         const querySql = `UPDATE marketData 
                           SET ${setCols} 
                           WHERE id = ${marketDataIdVarIdx} 
-                          RETURNING id, stock_id AS "stockId", date, 
+                          RETURNING id, symbol, date, 
                                     open_price AS "openPrice", close_price AS "closePrice", 
                                     high, low, volume, market_capitalization AS "marketCapitalization"`;
         const result = await db.query(querySql, [...values, id]);

@@ -9,19 +9,19 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class TransactionHistory {
     /** Add a new transaction entry (from data), update db, return new transaction data.
      *
-     * data should be { stockId, portfolioId, quantity, price, date, transactionType }
+     * data should be { symbol, portfolioId, quantity, price, date, transactionType }
      *
-     * Returns { id, stockId, portfolioId, quantity, price, date, transactionType }
+     * Returns { id, symbol, portfolioId, quantity, price, date, transactionType }
      **/
 
-    static async add({ stockId, portfolioId, quantity, price, date, transactionType }) {
+    static async add({ symbol, portfolioId, quantity, price, date, transactionType }) {
         const result = await db.query(
             `INSERT INTO transactionHistory
-             (stock_id, portfolio_id, quantity, price, date, transaction_type)
+             (symbol, portfolio_id, quantity, price, date, transaction_type)
              VALUES ($1, $2, $3, $4, $5, $6)
-             RETURNING id, stock_id AS "stockId", portfolio_id AS "portfolioId", 
+             RETURNING id, symbol, portfolio_id AS "portfolioId", 
                        quantity, price, date, transaction_type AS "transactionType"`,
-            [stockId, portfolioId, quantity, price, date, transactionType]
+            [symbol, portfolioId, quantity, price, date, transactionType]
         );
 
         const transaction = result.rows[0];
@@ -31,12 +31,12 @@ class TransactionHistory {
 
     /** Find all transaction entries for a portfolio.
      *
-     * Returns [{ id, stockId, portfolioId, quantity, price, date, transactionType }, ...]
+     * Returns [{ id, symbol, portfolioId, quantity, price, date, transactionType }, ...]
      **/
 
     static async findAllForPortfolio(portfolioId) {
         const result = await db.query(
-            `SELECT id, stock_id AS "stockId", portfolio_id AS "portfolioId", 
+            `SELECT id, symbol, portfolio_id AS "portfolioId", 
                     quantity, price, date, transaction_type AS "transactionType"
              FROM transactionHistory
              WHERE portfolio_id = $1`,
@@ -48,14 +48,14 @@ class TransactionHistory {
 
     /** Given a transactionHistory id, return data about the transaction.
      *
-     * Returns { id, stockId, portfolioId, quantity, price, date, transactionType }
+     * Returns { id, symbol, portfolioId, quantity, price, date, transactionType }
      *
      * Throws NotFoundError if not found.
      **/
 
     static async get(id) {
         const result = await db.query(
-            `SELECT id, stock_id AS "stockId", portfolio_id AS "portfolioId", 
+            `SELECT id, symbol, portfolio_id AS "portfolioId", 
                     quantity, price, date, transaction_type AS "transactionType"
              FROM transactionHistory
              WHERE id = $1`,
@@ -76,7 +76,7 @@ class TransactionHistory {
      *
      * Data can include: { quantity, price, date, transactionType }
      *
-     * Returns { id, stockId, portfolioId, quantity, price, date, transactionType }
+     * Returns { id, symbol, portfolioId, quantity, price, date, transactionType }
      *
      * Throws NotFoundError if not found.
      */
@@ -94,7 +94,7 @@ class TransactionHistory {
         const querySql = `UPDATE transactionHistory 
                           SET ${setCols} 
                           WHERE id = ${transactionHistoryIdVarIdx} 
-                          RETURNING id, stock_id AS "stockId", portfolio_id AS "portfolioId", 
+                          RETURNING id, symbol, portfolio_id AS "portfolioId", 
                                     quantity, price, date, transaction_type AS "transactionType"`;
         const result = await db.query(querySql, [...values, id]);
         const transaction = result.rows[0];

@@ -10,9 +10,13 @@ const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:3001";
 
 class StocktrendsApi {
     // the token for interactive with the API will be stored here.
-    static token;
+    static token = localStorage.getItem("token") || null;
 
     static async request(endpoint, data = {}, method = "get") {
+
+        if (!this.token) {
+            await this.createGuestUser();
+        }
 
         const url = `${BASE_URL}/${endpoint}`;
         const headers = { Authorization: `Bearer ${StocktrendsApi.token}` };
@@ -29,6 +33,17 @@ class StocktrendsApi {
         }
     }
 
+    static async createGuestUser() {
+        try {
+            const res = await axios.get(`${BASE_URL}/users/createguest`);
+            this.token = res.data.token;
+            localStorage.setItem("token", this.token);
+        } catch (err) {
+            console.error("Could not create guest user", err);
+            throw new Error("Could not create guest user");
+        }
+    }
+
     // Individual API routes
 
     /** Get strategies */
@@ -37,6 +52,20 @@ class StocktrendsApi {
         let res = await this.request("strategies");
         return res.strategies;
     }
+
+    /** Get strategies that don't have portfolios*/
+
+    static async getUnusedStrategies() {
+        try {
+            let res = await this.request("strategies/unused");
+            return res.strategies;
+        } catch (err) {
+            console.error("Error getting strategies without portfolios:", err.response);
+            let message = err.response.data.error.message;
+            throw Array.isArray(message) ? message : [message];
+        }
+    }
+
 
     /** Get details on a strategy by id. */
 
@@ -57,6 +86,19 @@ class StocktrendsApi {
     static async getPortfolio(id) {
         let res = await this.request(`portfolios/${id}`);
         return res.portfolio;
+    }
+
+    /**Create a new portfolio */
+
+    static async createPortfolio(data) {
+        try {
+            let res = await this.request("portfolios", data, "post");
+            return res.portfolio;
+        } catch (err) {
+            console.error("Error creating portfolio with strategy:", err.response);
+            let message = err.response.data.error.message;
+            throw Array.isArray(message) ? message : [message];
+        }
     }
 
     /** Get the current user. */
