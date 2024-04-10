@@ -5,6 +5,8 @@ import StrategyDetail from "../strategies/StrategyDetail";
 import LoginForm from "../auth/LoginForm";
 import SignupForm from "../auth/SignupForm";
 import Homepage from "../homepage/HomePage";
+import PortfolioList from "../portfolios/PortfolioList";
+import PortfolioDetail from "../portfolios/PortfolioDetail";
 
 function MyRoutes({ signup, login }) {
 
@@ -20,6 +22,11 @@ function MyRoutes({ signup, login }) {
                 <Route path="/strategies" element={<StrategyList />} />
 
                 <Route path="/strategies/:id" element={<StrategyDetail />} />
+
+                <Route path="/portfolios" element={<PortfolioList />} />
+
+                <Route path="/portfolios/:id" element={<PortfolioDetail />} />
+
             </Routes>
         </div>
     );

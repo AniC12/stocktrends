@@ -9,35 +9,34 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 class Stock {
     /** Add a new stock (from data), update db, return new stock data.
      *
-     * data should be { symbol, companyName, price, updateDate }
+     * data should be { symbol, price, updateDate }
      *
-     * Returns { id, symbol, companyName }
+     * Returns { id, symbol }
      **/
 
-    static async add({ symbol, companyName, price, updateDate }) {
+    static async add(symbol, price, updateDate) {
         const result = await db.query(
             `INSERT INTO stocks
-             (symbol, company_name, price, update_date)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, symbol, company_name AS "companyName", price, update_date as "updateDate"`,
-            [symbol, companyName, price, updateDate]
+             (symbol, price, update_date)
+             VALUES ($1, $2, $3)
+             RETURNING id, symbol, price, update_date as "updateDate"`,
+            [symbol.toUpperCase(), price, updateDate]
         );
 
         const stock = result.rows[0];
-
         return stock;
     }
 
     /** Find all stocks.
      *
-     * Returns [{ id, symbol, companyName }, ...]
+     * Returns [{ id, symbol }, ...]
      **/
 
     static async findAll() {
         const result = await db.query(
-            `SELECT id, symbol, company_name AS "companyName", price, update_date as "updateDate"
+            `SELECT id, symbol, price, update_date as "updateDate"
              FROM stocks
-             ORDER BY company_name`
+             ORDER BY symbol`
         );
 
         return result.rows;
@@ -45,14 +44,14 @@ class Stock {
 
     /** Given a stock id, return data about stock.
      *
-     * Returns { id, symbol, companyName, price, updateDate }
+     * Returns { id, symbol, price, updateDate }
      *
      * Throws NotFoundError if not found.
      **/
 
     static async get(id) {
         const result = await db.query(
-            `SELECT id, symbol, company_name AS "companyName", price, update_date as "updateDate"
+            `SELECT id, symbol, price, update_date as "updateDate"
              FROM stocks
              WHERE id = $1`,
             [id]
@@ -67,16 +66,16 @@ class Stock {
 
     /** Given a stock symbol, return data about stock.
      *
-     * Returns { id, symbol, companyName, price, updateDate }
+     * Returns { id, symbol, price, updateDate }
      *
     **/
 
     static async getBySymbol(symbol) {
         const result = await db.query(
-            `SELECT id, symbol, company_name AS "companyName", price, update_date as "updateDate"
+            `SELECT id, symbol, price, update_date as "updateDate"
              FROM stocks
              WHERE symbol = $1`,
-            [symbol]
+            [symbol.toUpperCase()]
         );
 
         if (result.rows.length === 0) {
@@ -88,12 +87,12 @@ class Stock {
 
     
 
-    static async updatePrice({ id, price, updateDate }) {
+    static async updatePrice(id, price, updateDate) {
         const result = await db.query(
             `UPDATE stocks
              SET price = $1, update_date = $2
              WHERE id = $3
-             RETURNING id, symbol, company_name AS "companyName", price, update_date as "updateDate"`,
+             RETURNING id, symbol, price, update_date as "updateDate"`,
             [price, updateDate, id]
         );
 

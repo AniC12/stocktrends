@@ -17,9 +17,10 @@ router.get('/', async (req, res, next) => {
 router.get('/unused', async (req, res, next) => {
     try {
         const userId = getToken(req);
-        const strategy = await Strategy.findUnused(userId);
-        return res.json({ strategy });
+        const strategies = await Strategy.findUnused(userId);
+        return res.json({ strategies });
     } catch (err) {
+        console.log('error ', err);
         return next(err);
     }
 });

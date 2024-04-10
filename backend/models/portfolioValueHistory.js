@@ -14,7 +14,7 @@ class PortfolioValueHistory {
      * Returns { id, portfolioId, date, value }
      **/
 
-    static async add({ portfolioId, date, value }) {
+    static async add(portfolioId, date, value) {
         const result = await db.query(
             `INSERT INTO portfolioValueHistory
              (portfolio_id, date, value)

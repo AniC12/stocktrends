@@ -12,13 +12,14 @@ const router = new express.Router();
 // Create a new portfolio
 router.post('/', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
-        const { portfolioName, availableCash, strategyId } = req.body;
+        console.log("create protfolio body", req);
+        const { portfolioName, strategyId } = req.body;
         availableCash = 1000;
         const userId = getToken(req);
         const now = new Date();
         const creationDate = now.toISOString().split('T')[0];
         const portfolio = await Portfolio.create({ userId, portfolioName, creationDate, availableCash, strategyId });
-        return res.status(201).json({ portfolio });
+        return res.json({ portfolio });
     } catch (err) {
         return next(err);
     }
@@ -47,33 +48,34 @@ router.get('/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
 });
 
 // Get a specific portfolio by ID
-router.get('full/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.get('/full/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
         const id = req.params.id;
         const portfolio = await Portfolio.get(id);
         const userStocks = await UserStock.findAllForPortfolio(id);
-        const retVal = {portfolio: portfolio, stocks: userStocks};
-        return res.json({ retVal });
+        const portfolioFull = {portfolio: portfolio, stocks: userStocks};
+        return res.json({ portfolioFull });
     } catch (err) {
         return next(err);
     }
 });
 
 // Get a specific portfolio by ID with stocks and prices
-router.get('fullWithValues/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+router.get('/fullWithValues/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
         const id = req.params.id;
         const portfolio = await Portfolio.get(id);
         const userStocks = await UserStock.findAllForPortfolio(id);
 
-        const enrichedStocks = await Utils.enrichStocks(userStocks);
+        const enrichedUserStocksData = await Utils.enrichStocks(userStocks);
 
         let totalValue = portfolio.availableCash;
 
+        enrichedStocks = enrichedUserStocksData.enrichedStocks;
         enrichedStocks.map(stock => {totalValue = totalValue + stock.value});
             
-        const retVal = {portfolio: portfolio, enrichedStocks: enrichedStocks, totalValue: totalValue};
-        return res.json({ retVal });
+        const portfolioFullWithValues = {portfolio: portfolio, stocks: enrichedStocks, totalValue: totalValue};
+        return res.json({ portfolioFullWithValues });
     } catch (err) {
         return next(err);
     }
@@ -108,12 +110,13 @@ router.post('/save/:id', authenticateJWT, ensureLoggedIn, async (req, res, next)
         
         const userStocks = await UserStock.findAllForPortfolio(id);
 
+        console.log("STOCKS", stocks);
+
         const enrichedStocksData = await Utils.enrichStocks(stocks);
         let totalValue = portfolio.availableCash + enrichedStocksData.totalValue;
-        enrichedStocksData.enrichedStocks.map(stock => {totalValue = totalValue + stock.value});
 
         const diff = Utils.calculateStockArraysDiffs(userStocks, stocks);
-        const now = Utils.getNow();
+        const now = new Date();
 
         await Promise.all([
             ...diff.remove.map(stock => UserStock.delete(stock.symbol)),
@@ -124,9 +127,13 @@ router.post('/save/:id', authenticateJWT, ensureLoggedIn, async (req, res, next)
             PortfolioValueHistory.add(id, now, totalValue)
         ]);
 
-        const retVal = {portfolio: portfolio, enrichedStocks: enrichedStocks, totalValue: totalValue};
+        const portfolioFullWithValues = {
+            portfolio: portfolio, 
+            stocks: enrichedStocksData.enrichedStocks, 
+            totalValue: totalValue
+        };
 
-        return res.json({ retVal });
+        return res.json({ portfolioFullWithValues });
     } catch (err) {
         return next(err);
     }
@@ -139,22 +146,29 @@ router.post('/applystrategy/:id/', authenticateJWT, ensureLoggedIn, async (req, 
         const id = req.params.id;
         const { confirm } = req.body;
 
+        console.log("applystrategy", id);
+
         const portfolio = await Portfolio.get(id);
+        console.log("portfolio", portfolio);
         const userStocks = await UserStock.findAllForPortfolio(id);
-        const enrichedUserStocksData = await Utils.enrichStocks(userStocks);        
-        const enrichedUserStocks = enrichedUserStocksData.enrichedStocks;
+        console.log("userStocks", userStocks);
+        const enrichedUserStocksData = await Utils.enrichStocks(userStocks);    
+        console.log("enrichedUserStocksData", enrichedUserStocksData);    
+        const enrichedUserStocks = enrichedUserStocksData.enrichedStocks; 
+        console.log("enrichedUserStocks", enrichedUserStocks);
         const totalValue = portfolio.availableCash + enrichedUserStocksData.totalValue;
+        console.log("totalValue", totalValue);
 
         const suggestedStocks = await Utils.calculateSuggestedPortfolio(portfolio.strategyId, totalValue);
 
         const diff = Utils.calculateStockArraysDiffs(enrichedUserStocks, suggestedStocks);
 
         if (!confirm) {
-            const retVal = {sell: diff.sell, buy: diff.buy};
-            return res.json({ retVal });
+            const transactions = {sell: diff.sell, buy: diff.buy};
+            return res.json({ transactions });
         }
 
-        const now = Utils.getNow();
+        const now = new Date();
 
         await Promise.all([
             ...diff.remove.map(stock => UserStock.delete(stock.symbol)),
@@ -162,12 +176,13 @@ router.post('/applystrategy/:id/', authenticateJWT, ensureLoggedIn, async (req, 
             ...diff.insert.map(stock => UserStock.insert(stock.symbol, id, stock.amount)),
             ...diff.sell.map(stock => TransactionHistory.add(stock.symbol, id, stock.amount, stock.price, now, 'Sell')),
             ...diff.buy.map(stock => TransactionHistory.add(stock.symbol, id, stock.amount, stock.price, now, 'Buy')),
-            PortfolioValueHistory.add(id, now, totalValue)
+            PortfolioValueHistory.add(id, now, totalValue),
+            Portfolio.updateCash(id, 0)
         ]);
 
-        const retVal = {portfolio: portfolio, enrichedStocks: suggestedStocks, totalValue: totalValue};
+        const portfolioFullWithValues = {portfolio: portfolio, stocks: suggestedStocks, totalValue: totalValue};
 
-        return res.json({ retVal });
+        return res.json({ portfolioFullWithValues });
     } catch (err) {
         return next(err);
     }
@@ -179,6 +194,28 @@ router.delete('/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) =>
         const id = req.params.id;
         await Portfolio.remove(id);
         return res.json({ message: "Portfolio deleted." });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// Get portfolio value history for a portfolio
+router.get('/valuehistory/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const portfolioValueHistory = await PortfolioValueHistory.findAllForPortfolio(id);
+        return res.json({ portfolioValueHistory });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// Get portfolio value history for a portfolio
+router.get('/transactionhistory/:id', authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const transactionValueHistory = await TransactionHistory.findAllForPortfolio(id);
+        return res.json({ transactionValueHistory });
     } catch (err) {
         return next(err);
     }

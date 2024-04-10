@@ -17,13 +17,11 @@ class StocktrendsApi {
         if (!this.token) {
             await this.createGuestUser();
         }
-
         const url = `${BASE_URL}/${endpoint}`;
         const headers = { Authorization: `Bearer ${StocktrendsApi.token}` };
         const params = (method === "get")
             ? {}
             : data;
-
         try {
             return (await axios({ url, method, data, params, headers })).data;
         } catch (err) {
@@ -35,7 +33,7 @@ class StocktrendsApi {
 
     static async createGuestUser() {
         try {
-            const res = await axios.get(`${BASE_URL}/users/createguest`);
+            const res = await axios.post(`${BASE_URL}/users/createguest`);
             this.token = res.data.token;
             localStorage.setItem("token", this.token);
         } catch (err) {
@@ -58,6 +56,7 @@ class StocktrendsApi {
     static async getUnusedStrategies() {
         try {
             let res = await this.request("strategies/unused");
+            console.log(res);
             return res.strategies;
         } catch (err) {
             console.error("Error getting strategies without portfolios:", err.response);
@@ -88,14 +87,71 @@ class StocktrendsApi {
         return res.portfolio;
     }
 
+    /** Get details on a portfolio by id */
+
+    static async getPortfolioFullWithValues(id) {
+        let res = await this.request(`portfolios/fullWithValues/${id}`);
+        return res.portfolioFullWithValues;
+    }
+
+    /** Get details on a portfolio by id */
+
+    static async getPortfolioFull(id) {
+        let res = await this.request(`portfolios/full/${id}`);
+        return res.portfolioFull;
+    }
+
+    /** Get details on a portfolio by id */
+
+    static async getPortfolioValueHistory(id) {
+        let res = await this.request(`portfolios/valuehistory/${id}`);
+        return res.portfolioValueHistory;
+    }
+
+    /** Get details on a portfolio by id */
+
+    static async getPortfolioTransactionHistory(id) {
+        let res = await this.request(`portfolios/transactionhistory/${id}`);
+        return res.transactionValueHistory;
+    }
+
     /**Create a new portfolio */
 
-    static async createPortfolio(data) {
+    static async createPortfolio(strategy) {
         try {
+            const data = { portfolioName : strategy.strategyName, strategyId: strategy.id };
             let res = await this.request("portfolios", data, "post");
             return res.portfolio;
         } catch (err) {
-            console.error("Error creating portfolio with strategy:", err.response);
+            console.error("Error creating portfolio with strategy:", err);
+            let message = err.response.data.error.message;
+            throw Array.isArray(message) ? message : [message];
+        }
+    }
+
+    static async savePortfolio(portfolioFullWithDetails) {
+        try {
+            const data = { availableCash : portfolioFullWithDetails.portfolio.availableCash, 
+                stocks: portfolioFullWithDetails.stocks };
+                const id = portfolioFullWithDetails.portfolio.id;
+            let res = await this.request(`portfolios/save/${id}`, data, "post");
+            return res.portfolioFullWithValues;
+        } catch (err) {
+            console.error("Error creating portfolio with strategy:", err);
+            let message = err.response.data.error.message;
+            throw Array.isArray(message) ? message : [message];
+        }
+    }
+
+    static async applyStrategy(portfolioId, confirm) {
+        try {
+            const data = { confirm : confirm };
+            let res = await this.request(`portfolios/applystrategy/${portfolioId}`, data, "post");
+            if (confirm)
+                return res.portfolioFullWithValues;
+            return res.transactions;
+        } catch (err) {
+            console.error("Error applying strategy :", err);
             let message = err.response.data.error.message;
             throw Array.isArray(message) ? message : [message];
         }
@@ -103,22 +159,22 @@ class StocktrendsApi {
 
     /** Get the current user. */
 
-    static async getCurrentUser(username) {
-        let res = await this.request(`users/${username}`);
+    static async getCurrentUser() {
+        let res = await this.request(`users/`);
         return res.user;
     }
 
     /** Get token for login from username, password. */
 
     static async login(data) {
-        let res = await this.request(`auth/token`, data, "post");
+        let res = await this.request(`users/login`, data, "post");
         return res.token;
     }
 
     /** Signup for site. */
 
     static async signup(data) {
-        let res = await this.request(`auth/register`, data, "post");
+        let res = await this.request(`users/register`, data, "post");
         return res.token;
     }
 

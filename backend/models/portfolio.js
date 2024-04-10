@@ -106,45 +106,6 @@ class Portfolio {
         return portfolio;
     }
 
-    /** Update portfolio data with `data`.
-     *
-     * This is a "partial update" --- it's fine if data doesn't contain
-     * all the fields; this only changes provided ones.
-     *
-     * Data can include: { portfolioName, availableCash, strategyId }
-     *
-     * Returns { id, userId, portfolioName, creationDate, availableCash, strategyId }
-     *
-     * Throws NotFoundError if not found.
-     */
-
-    static async update(id, data) {
-        const { setCols, values } = sqlForPartialUpdate(
-            data,
-            {
-                portfolioName: "portfolio_name",
-                availableCash: "available_cash",
-                strategyId: "strategy_id"
-            });
-        const portfolioIdVarIdx = "$" + (values.length + 1);
-
-        const querySql = `UPDATE portfolios 
-                          SET ${setCols} 
-                          WHERE id = ${portfolioIdVarIdx} 
-                          RETURNING id, 
-                          user_id AS "userId", 
-                          portfolio_name AS "portfolioName", 
-                          creation_date AS "creationDate", 
-                          available_cash AS "availableCash", 
-                          strategy_id AS "strategyId"`;
-        const result = await db.query(querySql, [...values, id]);
-        const portfolio = result.rows[0];
-
-        if (!portfolio) throw new NotFoundError(`No portfolio: ${id}`);
-
-        return portfolio;
-    }
-
     static async updateCash(id, cash) {
         const querySql = `UPDATE portfolios 
                           SET available_cash = $1

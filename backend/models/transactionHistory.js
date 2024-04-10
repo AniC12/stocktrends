@@ -14,14 +14,14 @@ class TransactionHistory {
      * Returns { id, symbol, portfolioId, quantity, price, date, transactionType }
      **/
 
-    static async add({ symbol, portfolioId, quantity, price, date, transactionType }) {
+    static async add(symbol, portfolioId, quantity, price, date, transactionType) {
         const result = await db.query(
             `INSERT INTO transactionHistory
              (symbol, portfolio_id, quantity, price, date, transaction_type)
              VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING id, symbol, portfolio_id AS "portfolioId", 
                        quantity, price, date, transaction_type AS "transactionType"`,
-            [symbol, portfolioId, quantity, price, date, transactionType]
+            [symbol.toUpperCase(), portfolioId, quantity, price, date, transactionType]
         );
 
         const transaction = result.rows[0];
@@ -67,57 +67,6 @@ class TransactionHistory {
         if (!transaction) throw new NotFoundError(`No transaction history entry: ${id}`);
 
         return transaction;
-    }
-
-    /** Update transaction history entry with `data`.
-     *
-     * This is a "partial update" --- it's fine if data doesn't contain
-     * all the fields; this only changes provided ones.
-     *
-     * Data can include: { quantity, price, date, transactionType }
-     *
-     * Returns { id, symbol, portfolioId, quantity, price, date, transactionType }
-     *
-     * Throws NotFoundError if not found.
-     */
-    static async update(id, data) {
-        const { setCols, values } = sqlForPartialUpdate(
-            data,
-            {
-                quantity: "quantity",
-                price: "price",
-                date: "date",
-                transactionType: "transaction_type"
-            });
-        const transactionHistoryIdVarIdx = "$" + (values.length + 1);
-
-        const querySql = `UPDATE transactionHistory 
-                          SET ${setCols} 
-                          WHERE id = ${transactionHistoryIdVarIdx} 
-                          RETURNING id, symbol, portfolio_id AS "portfolioId", 
-                                    quantity, price, date, transaction_type AS "transactionType"`;
-        const result = await db.query(querySql, [...values, id]);
-        const transaction = result.rows[0];
-
-        if (!transaction) throw new NotFoundError(`No transaction history entry: ${id}`);
-
-        return transaction;
-    }
-
-    /** Delete given transaction history entry from database; returns undefined.
-     *
-     * Throws NotFoundError if transaction history entry not found.
-     **/
-
-    static async remove(id) {
-        const result = await db.query(
-            `DELETE FROM transactionHistory WHERE id = $1 RETURNING id`,
-            [id]
-        );
-
-        const transaction = result.rows[0];
-
-        if (!transaction) throw new NotFoundError(`No transaction history entry: ${id}`);
     }
 }
 

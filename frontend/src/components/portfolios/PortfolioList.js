@@ -10,6 +10,7 @@ function PortfolioList() {
     const [showModal, setShowModal] = useState(false);
 
     const handleCreatePortfolioClick = () => {
+        console.log('Opening modal...');
         setShowModal(true);
     };
 
@@ -30,15 +31,17 @@ function PortfolioList() {
                 <div className="list-group">
                     {portfolios.map(portfolio => (
                         <Link key={portfolio.id} to={`/portfolios/${portfolio.id}`} className="list-group-item list-group-item-action">
-                            {portfolio.portfolioName} - Available Cash: ${portfolio.availableCash}
+                            {portfolio.portfolioName}
                         </Link>
+                        
                     ))}
                 </div>
             ) : (
                 <p className="lead">No portfolios found.</p>
             )}
+            <br/><br/><br/><br/><br/><br/>
             <button onClick={handleCreatePortfolioClick}>Create Portfolio</button>
-            {showModal && <PortfolioModal closeModal={() => setShowModal(false)} />}
+            {showModal && <PortfolioModal show={showModal} handleClose={() => setShowModal(false)} />}
         </div>
     );
 }

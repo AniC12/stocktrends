@@ -1,59 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import Navigation from './components/routes-nav/Navigation';
-import MyRoutes from './components/routes-nav/Routs';
+import React, { useState, useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
-import StocktrendsApi from './api/api';
-import useLocalStorage from './hooks/useLocalStorage';
+import useLocalStorage from "./hooks/useLocalStorage";
+import Navigation from "./components/routes-nav/Navigation";
+import MyRoutes from "./components/routes-nav/Routs";
+import StocktrendsApi from "./api/api";
+import UserContext from "./components/auth/UserContext";
 
-// Key name for storing token in localStorage for "remember me" re-login
-export const TOKEN_STORAGE_ID = "my-token";
+export const TOKEN_STORAGE_ID = "stocktrends-token";
 
 function App() {
-
-  //const [infoLoaded, setInfoLoaded] = useState(false);
-  //const [applicationIds, setApplicationIds] = useState(new Set([]));
-  //const [currentUser, setCurrentUser] = useState(null);
   const [token, setToken] = useLocalStorage(TOKEN_STORAGE_ID);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  /* useEffect(function loadUserInfo() {
-
+  useEffect(() => {
+    StocktrendsApi.token = token;
     async function getCurrentUser() {
       if (token) {
         try {
-          let { username } = jwt.decode(token);
-          // put the token on the Api class so it can use it to call the API.
-          StocktrendsApi.token = token;
-          let currentUser = await StocktrendsApi.getCurrentUser(username);
-          setCurrentUser(currentUser);
-          setApplicationIds(new Set(currentUser.applications));
-        } catch (err) {
-          console.error("App loadUserInfo: problem loading", err);
+          const user = await StocktrendsApi.getCurrentUser();
+          setCurrentUser(user);
+        } catch (error) {
+          console.error("App got error on getting user:", error);
           setCurrentUser(null);
         }
       }
-      setInfoLoaded(true);
     }
-
-    // set infoLoaded to false while async getCurrentUser runs; once the
-    // data is fetched (or even if an error happens!), this will be set back
-    // to false to control the spinner.
-    setInfoLoaded(false);
     getCurrentUser();
   }, [token]);
-
-  /** Handles site-wide logout. */
-  /*function logout() {
-    setCurrentUser(null);
-    setToken(null);
-  } */
 
   async function signup(signupData) {
     try {
       let token = await StocktrendsApi.signup(signupData);
       setToken(token);
+      // Optionally fetch user info here if not included in signup response
       return { success: true };
     } catch (errors) {
-      console.error("signup failed", errors);
+      console.error("Signup failed:", errors);
       return { success: false, errors };
     }
   }
@@ -62,19 +44,28 @@ function App() {
     try {
       let token = await StocktrendsApi.login(loginData);
       setToken(token);
+      // Optionally fetch user info here if not included in login response
       return { success: true };
     } catch (errors) {
-      console.error("login failed", errors);
+      console.error("Login failed:", errors);
       return { success: false, errors };
     }
   }
 
+  function logout() {
+    setCurrentUser(null);
+    setToken(null);
+  }
+
   return (
     <BrowserRouter>
-      <div className="App">
-        <Navigation />
-        <MyRoutes login={login} signup={signup}/>
-      </div>
+      <UserContext.Provider
+        value={{ currentUser, setCurrentUser }}>
+        <div className="App">
+          <Navigation initialUser={currentUser} logout={logout} />
+          <MyRoutes login={login} signup={signup} />
+        </div>
+      </UserContext.Provider>
     </BrowserRouter>
   );
 }

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import StocktrendsApi from '../api/StocktrendsApi';
+import { useNavigate } from "react-router-dom";
+import StocktrendsApi from '../../api/api';
 
-function PortfolioModal({ show, handleClose, handlePortfolioCreated }) {
+function PortfolioModal({ show, handleClose }) {
     const [strategies, setStrategies] = useState([]);
     const [selectedStrategyId, setSelectedStrategyId] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchStrategies = async () => {
@@ -15,12 +17,14 @@ function PortfolioModal({ show, handleClose, handlePortfolioCreated }) {
         if (show) {
             fetchStrategies();
         }
+        
     }, [show]);
 
     const handleSave = async () => {
         if (selectedStrategyId) {
-            await StocktrendsApi.createPortfolio(selectedStrategyId);
-            handlePortfolioCreated();
+            const selectedStrategy = strategies.find(strategy => strategy.id === Number(selectedStrategyId));
+            const portfolio = await StocktrendsApi.createPortfolio(selectedStrategy);
+            navigate(`/portfolios/${portfolio.id}`);
         }
     };
 
@@ -39,7 +43,7 @@ function PortfolioModal({ show, handleClose, handlePortfolioCreated }) {
                     <option value="">Select Strategy</option>
                     {strategies.map(strategy => (
                         <option key={strategy.id} value={strategy.id}>
-                            {strategy.name}
+                            {strategy.strategyName}
                         </option>
                     ))}
                 </select>

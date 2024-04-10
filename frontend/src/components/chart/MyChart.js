@@ -2,14 +2,13 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
-function StrategyChart({ performanceHistory }) {
-    // Prepare the data for Chart.js
+function MyChart({ data, title, xLabel, yLabel }) {
     const chartData = {
-        labels: performanceHistory.map((entry) => entry.date),
+        labels: data.map((entry) => entry.date),
         datasets: [
             {
-                label: 'Strategy Performance',
-                data: performanceHistory.map((entry) => entry.returnRate),
+                label: title,
+                data: data.map((entry) => entry.value),
                 fill: false,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
@@ -23,13 +22,13 @@ function StrategyChart({ performanceHistory }) {
                 beginAtZero: true,
                 title: {
                     display: true,
-                    text: 'Return Rate (%)'
+                    text: yLabel
                 }
             },
             x: {
                 title: {
                     display: true,
-                    text: 'Date'
+                    text: xLabel
                 }
             }
         },
@@ -44,4 +43,4 @@ function StrategyChart({ performanceHistory }) {
     return <Line data={chartData} options={options} />;
 };
 
-export default StrategyChart;
+export default MyChart;

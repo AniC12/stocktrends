@@ -26,9 +26,8 @@ CREATE TABLE portfolios (
 CREATE TABLE stocks (
     id SERIAL PRIMARY KEY,
     symbol TEXT NOT NULL UNIQUE,
-    company_name TEXT,
     price FLOAT,
-    update_date INTEGER
+    update_date DATE
 );
 
 CREATE TABLE userStocks (
@@ -36,35 +35,16 @@ CREATE TABLE userStocks (
     symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
     portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
     amount FLOAT NOT NULL,
-    purchase_date INTEGER,
+    purchase_date DATE,
     purchase_price FLOAT,
-    sold_date INTEGER,
+    sold_date DATE,
     sold_price FLOAT
-);
-
-CREATE TABLE marketData (
-    id SERIAL PRIMARY KEY,
-    symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
-    date INTEGER NOT NULL,
-    open_price FLOAT NOT NULL,
-    close_price FLOAT NOT NULL,
-    high FLOAT NOT NULL,
-    low FLOAT NOT NULL,
-    volume FLOAT NOT NULL,
-    market_capitalization FLOAT NOT NULL
-);
-
-CREATE TABLE returnRates (
-    id SERIAL PRIMARY KEY,
-    strategy_id INTEGER REFERENCES strategies(id) ON DELETE CASCADE,
-    date_interval TEXT NOT NULL,
-    rate FLOAT NOT NULL
 );
 
 CREATE TABLE strategyPerformanceHistory (
     id SERIAL PRIMARY KEY,
     strategy_id INTEGER REFERENCES strategies(id) ON DELETE CASCADE,
-    date INTEGER NOT NULL,
+    year INTEGER NOT NULL,
     return_rate FLOAT NOT NULL
 );
 
@@ -72,16 +52,16 @@ CREATE TABLE transactionHistory (
     id SERIAL PRIMARY KEY,
     symbol TEXT NOT NULL REFERENCES stocks(symbol) ON DELETE CASCADE,
     portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
-    quantity INTEGER NOT NULL,
+    quantity FLOAT NOT NULL,
     price FLOAT,
-    date INTEGER NOT NULL,
+    date TIMESTAMP NOT NULL,
     transaction_type TEXT NOT NULL
 );
 
 CREATE TABLE portfolioValueHistory (
     id SERIAL PRIMARY KEY,
     portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
-    date INTEGER NOT NULL,
+    date TIMESTAMP NOT NULL,
     value FLOAT NOT NULL
 );
 
@@ -128,7 +108,7 @@ This investment philosophy inherently assumes that the stock market is inefficie
 
 
 
-INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
+INSERT INTO strategyPerformanceHistory (strategy_id, year, return_rate) VALUES
 (1, 2004, 24.69),
 (1, 2005, 19.16),
 (1, 2006, 7.92),
@@ -150,7 +130,7 @@ INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
 (1, 2022, 21.82),
 (1, 2023, 16.68);
 
-INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
+INSERT INTO strategyPerformanceHistory (strategy_id, year, return_rate) VALUES
 (2, 2004, 11.53),
 (2, 2005, 7.26),
 (2, 2006, 14.81),
@@ -172,7 +152,7 @@ INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
 (2, 2022, 14.38),
 (2, 2023, 13.83);
 
-INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
+INSERT INTO strategyPerformanceHistory (strategy_id, year, return_rate) VALUES
 (3, 2004, 9.59),
 (3, 2005, 14.78),
 (3, 2006, 13.17),
@@ -194,47 +174,47 @@ INSERT INTO strategyPerformanceHistory (strategy_id, date, return_rate) VALUES
 (3, 2022, 11.01),
 (3, 2023, 11.61);
 
-INSERT INTO stocks (symbol, company_name) VALUES
-('MSFT', 'Microsoft Corporation'),
-('AAPL', 'Apple Inc.'),
-('NVDA', 'Nvidia Corporation'),
-('2222.SR', 'Saudi Aramco'),
-('GOOG', 'Alphabet Inc.'),
-('AMZN', 'Amazon.com, Inc.'),
-('META', 'Meta Platforms, Inc.'), 
-('BRK-B', 'Berkshire Hathaway Inc.'),
-('LLY', 'Eli Lilly and Company'),
-('TSM', 'Taiwan Semiconductor Manufacturing Company'),
-('RDDT', 'Reddit, Inc.'),
-('TSLA', 'Tesla, Inc.'),
-('SMCI', 'Super Micro Computer, Inc.'),
-('LULU', 'Lululemon Athletica Inc.'),
-('AUNA', 'Auna S.A.'),
-('MRNO', 'Murano Global Investments PLC'),
-('ALAB', 'Astera Labs, Inc.'),
-('SOUN', 'SoundHound AI, Inc.'),
-('CAT', 'Caterpillar Inc.'),
-('ABBV', 'AbbVie Inc.'),
-('DE', 'Deere & Company'),
-('CVX', 'Chevron Corporation'),
-('GE', 'General Electric Company'),
-('BK', 'The Bank of New York Mellon Corporation'),
-('DAL', 'Delta Air Lines, Inc.'),
-('AIG', 'American International Group, Inc.'),
-('GIS', 'General Mills, Inc.'),
-('JNJ', 'Johnson & Johnson');
+INSERT INTO stocks (symbol) VALUES
+('MSFT'),
+('AAPL'),
+('NVDA'),
+('GOOG'),
+('AMZN'),
+('META'),
+('BRK-B'),
+('LLY'),
+('TSM'),
+('AVGO'),
+('RDDT'),
+('TSLA'),
+('SMCI'),
+('LULU'),
+('AUNA'),
+('MRNO'),
+('ALAB'),
+('SOUN'),
+('CAT'),
+('ABBV'),
+('DE'),
+('CVX'),
+('GE'),
+('BK'),
+('DAL'),
+('AIG'),
+('GIS'),
+('JNJ');
 
 INSERT INTO suggestedPortfolio (strategy_id, symbol, amount) VALUES
 (1, 'MSFT', 3185000),
 (1, 'AAPL', 2660000),
 (1, 'NVDA', 2357000),
-(1, '2222.SR', 2012000),
 (1, 'GOOG', 1879000),
 (1, 'AMZN', 1857000),
 (1, 'META', 1299000),
 (1, 'BRK-B', 890100),
 (1, 'LLY', 732200),  
-(1, 'TSM', 728980),  
+(1, 'TSM', 728980),   
+(1, 'AVGO', 619170),  
 (2, 'RDDT', 1),
 (2, 'TSLA', 1),
 (2, 'SMCI', 1),

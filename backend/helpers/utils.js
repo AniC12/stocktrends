@@ -1,38 +1,45 @@
 const Stock = require("../models/stock");
 const axios = require('axios');
-const myApiKey = require("../apiKey")
+const API_KEY = require("../apiKey");
+const SuggestedPortfolio = require("../models/suggestedPortfolio");
 
 async function getStockPrice(symbol) {
 
-    const dbStock = Stock.getBySymbol(symbol);
-
-    if (dbStock && dbStock.price > 0 && dbStock.updateDate === today) {
-        return dbStock.price;
-    }
-
-    // Todo: make api call
-    const apiStock = {symbol: symbol, price: 100, companyName:"Microsoft"};
-
-    if (dbStock) {
-        Stock.updatePrice(dbStock.id, apiStock.price, getNow());
-    } else {
-        Stock.add(symbol, apiStock.companyName, apiStock.price, getNow());
-    }
+    // const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=5min&apikey=${API_KEY}`;
+    const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY.finnhubApiKey}`;
     
-    return apiStock.price;
+    try {
+        const dbStock = await Stock.getBySymbol(symbol);
+
+        if (dbStock && dbStock.price > 0 && dbStock.updateDate.getTime() === getToday().getTime()) {
+            return dbStock.price;
+        }
+
+        // Todo: make api call
+        const response = await axios.get(url);
+        const data = response.data;
+        const price = parseFloat(data["c"]);
+        
+
+        // Update or add the stock with the new price
+        if (dbStock) {
+            await Stock.updatePrice(dbStock.id, price, getToday());
+        } else {
+            await Stock.add(symbol, price, getToday());
+        }
+
+        return price;
+    } catch (err) {
+        console.error("Error fetching stock price:", err);
+        throw new Error("Failed to fetch stock price");
+    }
+
 }
 
-function getNow() {
+function getToday() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0 indexed
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    const dateString = `${year}${month}${day}${hours}${minutes}${seconds}`;
-    return parseInt(dateString, 10);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return today;
 }
 
 function calculateStockArraysDiffs(currentArray, newArray) {
@@ -46,31 +53,31 @@ function calculateStockArraysDiffs(currentArray, newArray) {
     const currentMap = new Map(currentArray.map(item => [item.symbol, {amount: item.amount, price: item.price}]));
     const newMap = new Map(newArray.map(item => [item.symbol, {amount: item.amount, price: item.price}]));
 
-    currentArray.forEach(({symbol, data}) => {
+   currentMap.forEach((currentData, symbol) => {
         if (newMap.has(symbol)) {
-            const data2 = newMap.get(symbol);
-            const difference = data.amount - data2.amount;
+            const newData = newMap.get(symbol);
+            const difference = currentData.amount - newData.amount;
             if (difference > 0) {
-                sell.push({symbol, amount: difference, price: data.price});
-                update.push({symbol, amount: data2.amount, price: data.price});
+                sell.push({ symbol, amount: difference, price: currentData.price });
+                update.push({ symbol, amount: newData.amount, price: currentData.price });
             }
         } else {
-            sell.push({symbol, amount: data.amount, price: data.price});
-            remove.push({symbol, amount: data.amount, price: data.price});
+            sell.push({ symbol, amount: currentData.amount, price: currentData.price });
+            remove.push({ symbol, amount: currentData.amount, price: currentData.price });
         }
     });
 
-    newArray.forEach(({symbol, data}) => {
+    newMap.forEach((newData, symbol) => {
         if (currentMap.has(symbol)) {
-            const data2 = currentMap.get(symbol);
-            const difference = data.amount - data2.amount;
+            const currentData = currentMap.get(symbol);
+            const difference = newData.amount - currentData.amount;
             if (difference > 0) {
-                buy.push({symbol, amount: difference, price: data.price});
-                update.push({symbol, amount: data2.amount, price: data.price});
+                buy.push({ symbol, amount: difference, price: newData.price });
+                update.push({ symbol, amount: newData.amount, price: newData.price });
             }
         } else {
-            buy.push({symbol, amount: data.amount, price: data.price});
-            insert.push({symbol, amount: data.amount, price: data.price});
+            buy.push({ symbol, amount: newData.amount, price: newData.price });
+            insert.push({ symbol, amount: newData.amount, price: newData.price });
         }
     });
 
@@ -84,7 +91,7 @@ async function enrichStocks(stocks) {
     for (const stock of stocks) {
         let price = stock.price;
         // Check if the price needs to be updated
-        if (!(price > 0 && stock.priceUpdateDate === Utils.getNow())) {
+        if (!(price > 0 && stock.priceUpdateDate === getToday())) {
             price = await getStockPrice(stock.symbol); // Await the async call within the loop
         }
         const value = price * stock.amount;
@@ -98,14 +105,14 @@ async function enrichStocks(stocks) {
 
 async function calculateSuggestedPortfolio(strategyId, cash) {
 
-    const suggestedStocks = SuggestedPortfolio.findAllForStrategy(strategyId);
+    const suggestedStocks = await SuggestedPortfolio.findAllForStrategy(strategyId);
 
     const enrichStocksData = await enrichStocks(suggestedStocks);
 
     const retValStocks = [];
 
     let totalAmount = 0;
-    enrichStocksData.enrichedStocks.forEach(s => {total += s.amount;});
+    enrichStocksData.enrichedStocks.forEach(s => {totalAmount += s.amount;});
 
     for (const stock of enrichStocksData.enrichedStocks) {
         const portion = stock.amount / totalAmount;
@@ -119,7 +126,7 @@ async function calculateSuggestedPortfolio(strategyId, cash) {
 
 module.exports = { 
     getStockPrice, 
-    getNow, 
+    getToday, 
     calculateStockArraysDiffs, 
     enrichStocks, 
     calculateSuggestedPortfolio };
