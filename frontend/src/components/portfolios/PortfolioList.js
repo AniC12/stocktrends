@@ -40,7 +40,7 @@ function PortfolioList() {
                 <p className="lead">No portfolios found.</p>
             )}
             <br/><br/><br/><br/><br/><br/>
-            <button onClick={handleCreatePortfolioClick}>Create Portfolio</button>
+            <button class="btn btn-primary btn-lg" onClick={handleCreatePortfolioClick}>Create Portfolio</button>
             {showModal && <PortfolioModal show={showModal} handleClose={() => setShowModal(false)} />}
         </div>
     );

@@ -5,7 +5,6 @@ const SuggestedPortfolio = require("../models/suggestedPortfolio");
 
 async function getStockPrice(symbol) {
 
-    // const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=5min&apikey=${API_KEY}`;
     const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY.finnhubApiKey}`;
     
     try {

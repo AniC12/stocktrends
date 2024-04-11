@@ -49,7 +49,7 @@ function PortfolioDetail() {
             <h3>{portfolioFullWithValues.portfolio.portfolioName}</h3>
             <PortfolioForm initialPortfolioFullWithValues={portfolioFullWithValues} onSave={refreshData} />
             <br/><br/><br/>
-            <button onClick={handleApplyStrategyClick}>Apply strategy</button>
+            <button className="btn btn-primary btn-lg" onClick={handleApplyStrategyClick}>Apply strategy</button>
             {showModal && <ApplyStrategyModal 
                     portfolioId={portfolioFullWithValues.portfolio.id} 
                     show={showModal} 

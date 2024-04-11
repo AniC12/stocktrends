@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import StocktrendsApi from "../../api/api";
 import LoadingSpinner from "../common/LoadingSpinner";
 import MyChart from "../chart/MyChart";
 
 function StrategyDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
 
     const [strategy, setStrategy] = useState(null);
     const [performanceHistory, setPerformanceHistory] = useState(null);
@@ -21,6 +22,10 @@ function StrategyDetail() {
 
     if (!strategy || !performanceHistory) return <LoadingSpinner />;
 
+    const handleNavigate = () => {
+        navigate("/portfolios");  // Navigate to portfolios page
+    };
+
     return (
         <div className="StrategyDetail col-md-8 offset-md-2">
             <h4>{strategy.strategyName}</h4>
@@ -30,8 +35,7 @@ function StrategyDetail() {
                 title={'Strategy Performance'}
                 xLabel={"Date"}
                 yLabel={"Return Rate (%)"} />
-            <button type="button" className="btn btn-outline-primary">Create Portfolio for this Strategy</button>
-            <button type="button" className="btn btn-outline-primary">Go to My Portfolio for this Strategy</button>
+            <button type="button" className="btn btn-outline-primary" onClick={handleNavigate}>Go to My Portfolios</button>
         </div>
     );
 }
