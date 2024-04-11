@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/stocktrends/static/css/main.447d8f1c.css",
-    "main.js": "/stocktrends/static/js/main.defdb0a5.js",
+    "main.js": "/stocktrends/static/js/main.806ebc99.js",
     "static/js/592.bf6ca574.chunk.js": "/stocktrends/static/js/592.bf6ca574.chunk.js",
     "index.html": "/stocktrends/index.html",
     "main.447d8f1c.css.map": "/stocktrends/static/css/main.447d8f1c.css.map",
-    "main.defdb0a5.js.map": "/stocktrends/static/js/main.defdb0a5.js.map",
+    "main.806ebc99.js.map": "/stocktrends/static/js/main.806ebc99.js.map",
     "592.bf6ca574.chunk.js.map": "/stocktrends/static/js/592.bf6ca574.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.447d8f1c.css",
-    "static/js/main.defdb0a5.js"
+    "static/js/main.806ebc99.js"
   ]
 }
